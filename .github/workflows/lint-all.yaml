@@ -1,9 +1,7 @@
-name: Lint
+name: Lint All
 
 on:
-  pull_request:
-    paths:
-      - '**/*.md'
+  workflow_dispatch:
 
 jobs:
   lint:
@@ -15,16 +13,10 @@ jobs:
       - name: Install zhlint
         run: yarn global add zhlint
 
-      - name: Get changed files
-        id: changed-files
-        uses: tj-actions/changed-files@v45
-
-      - name: Lint Markdown files
-        env:
-          ALL_CHANGED_FILES: ${{ steps.changed-files.outputs.all_changed_files }}
+      - name: Lint All Markdown Files
         run: |
           mkdir -p linted_output
-          for file in ${{ env.ALL_CHANGED_FILES }}; do
+          find . -type f -name '*.md' | while read file; do
             output_dir="linted_output/$(dirname "$file")"
             mkdir -p "$output_dir"
             zhlint "$file" --output="$output_dir/$(basename "$file")"
