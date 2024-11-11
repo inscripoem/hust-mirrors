@@ -24,12 +24,16 @@ jobs:
             mkdir -p "$output_dir"
             zhlint "$file" --output="$output_dir/$(basename "$file")"
           done
-          if [ -n "$(ls -A linted_output)" ]; then
-            exit 1
-          fi
 
       - name: Upload Linted Markdown
         uses: actions/upload-artifact@v4
         with:
           name: linted-markdown
           path: linted_output/
+
+      - name: Check lint errors
+        run: |
+          if [ -n "$(ls -A linted_output)" ]; then
+            echo "Linting errors found. Please check the uploaded artifacts and the lint logs."
+            exit 1
+          fi
