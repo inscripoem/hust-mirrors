@@ -16,11 +16,19 @@ jobs:
       - name: Lint All Markdown Files
         run: |
           mkdir -p linted_output
+          linted_failed=0
           find . -type f -name '*.md' | while read file; do
             output_dir="linted_output/$(dirname "$file")"
             mkdir -p "$output_dir"
-            zhlint "$file" --output="$output_dir/$(basename "$file")"
+            set +e
+            zhlint "$file" > /dev/null 2>&1
+            if [ $? -ne 0 ]; then
+              linted_failed=1
+              zhlint "$file" --output="$output_dir/$(basename "$file")"
+            fi
+            set -e
           done
+          echo "linted_failed=$linted_failed" >> "$GITHUB_ENV"
 
       - name: Upload Linted Markdown
         uses: actions/upload-artifact@v4
@@ -30,7 +38,8 @@ jobs:
 
       - name: Check lint errors
         run: |
-          if [ -n "$(ls -A linted_output)" ]; then
+          set -e
+          if [ "$linted_failed" -ne 0 ]; then
             echo "Linting errors found. Please check the uploaded artifacts and the lint logs."
             exit 1
           fi
